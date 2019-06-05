@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import re
 from numpy import log2 as log
+import pprint
 
 
 
@@ -116,9 +117,9 @@ def calc_entropy_atributo(dataset, atributo):
 	entropia_atributos=0
 
 	for variable in variaveis:
-
 		entropia = 0
 		for i in values:
+
 			num = len(dataset[atributo][dataset[atributo]==variable][dataset[colun_survived] == i])
 			den = len(dataset[atributo][dataset[atributo]==variable])
 			fraction = num/(den + 0.000001)
@@ -136,17 +137,46 @@ def calc_entropy_atributo(dataset, atributo):
 
 
 def calc_ganho_info(dataset):
-	list_entropia_atributos = []
 	list_ganho_info = []
 
-	for i in dataset.keys()[:-1]:
+	for i in dataset.keys()[1:]:
 		list_ganho_info.append(calc_entropia_survived(dataset)-calc_entropy_atributo(dataset, i))
-	return list_ganho_info
+	
+	return  dataset.keys()[1:][np.argmax(list_ganho_info)]
 
 
-t = calc_ganho_info(dataset)
-print(t)
 
+
+def get_subtable(df, node,value):
+ 	return df[df[node] == value].reset_index(drop=True)
+
+
+def buildTree(df,tree=None): 
+	Class = df.keys()[0] 
+	node = calc_ganho_info(df)
+
+	attValue = np.unique(df[node])
+	
+	#Create an empty dictionary to create tree	
+	if tree is None:					
+		tree={}
+		tree[node] = {}
+	
+   
+	for value in attValue:
+		
+		subtable = get_subtable(df,node,value)
+		clValue,counts = np.unique(subtable['Survived'],return_counts=True)						
+		
+		if len(counts)==1:#Checking purity of subset
+			tree[node][value] = clValue[0]													
+		else:		
+			tree[node][value] = buildTree(subtable) #Calling the function recursively 
+				   
+	return tree
+
+tree = buildTree(dataset)
+pprint.pprint(tree)
 
 
 
