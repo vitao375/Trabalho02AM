@@ -61,15 +61,15 @@ for dataset in full_data:
 
 for dataset in full_data:
 	# Mapping Sex
-	dataset['Sex'] = dataset['Sex'].map( {'female': 0, 'male': 1} ).astype(int)
+	#dataset['Sex'] = dataset['Sex'].map( {'female': 0, 'male': 1} ).astype(int)
 	
 	# Mapping titles
-	title_mapping = {"Mr": 1, "Master": 2, "Mrs": 3, "Miss": 4, "Rare": 5}
-	dataset['Title'] = dataset['Title'].map(title_mapping)
+	#title_mapping = {"Mr": 1, "Master": 2, "Mrs": 3, "Miss": 4, "Rare": 5}
+	#dataset['Title'] = dataset['Title'].map(title_mapping)
 	dataset['Title'] = dataset['Title'].fillna(0)
 
 	# Mapping Embarked
-	dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
+	#dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
 	
 	# Mapping Fare
 	dataset.loc[ dataset['Fare'] <= 7.91, 'Fare'] 								= 0
@@ -89,9 +89,9 @@ for dataset in full_data:
 drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'SibSp']
 dataset = dataset.drop(drop_elements, axis = 1)
 #test  = test.drop(drop_elements, axis = 1)
-
-#print(dataset.head(4))
-
+dataset = pd.DataFrame(dataset)
+#print(dataset)
+target = 'Survived'
 entropy_node =0
 values = dataset.Survived.unique()
 for value in values:
@@ -145,15 +145,18 @@ def calc_ganho_info(dataset):
 	return  dataset.keys()[1:][np.argmax(list_ganho_info)]
 
 
-
-
 def get_subtable(df, node,value):
- 	return df[df[node] == value].reset_index(drop=True)
+	h = df[df[node] == value].reset_index(drop=True)
+	
+	return h
+
 
 
 def buildTree(df,tree=None): 
 	Class = df.keys()[0] 
+	print(Class)
 	node = calc_ganho_info(df)
+	print(node)
 
 	attValue = np.unique(df[node])
 	
@@ -164,19 +167,33 @@ def buildTree(df,tree=None):
 	
    
 	for value in attValue:
+
+		#print(value)
 		
-		subtable = get_subtable(df,node,value)
-		clValue,counts = np.unique(subtable['Survived'],return_counts=True)						
+		#subtable =get_subtable(df, node, value)
 		
-		if len(counts)==1:#Checking purity of subset
-			tree[node][value] = clValue[0]													
-		else:		
-			tree[node][value] = buildTree(subtable) #Calling the function recursively 
-				   
+		clValue,counts = np.unique(df[target],return_counts=True)	
+		#print(np.unique(subtable[target],return_counts=True))
+		#print(subtable[target])				
+		
+		if (len(counts)==1 or (len(df.columns)<=2)):#Checking purity of subset
+			tree[node][value] = counts	
+			print('Aki======ok')
+			print(counts)
+			print(clValue)
+			print(clValue[0])											
+		else:	
+			subtable = df.drop(columns=[node])
+			print(subtable)	
+			tree[node][value] = buildTree(subtable, tree) #Calling the function recursively 
+			
+			print("Entrou no else")
+	#print(df)			   
 	return tree
 
+
+#print(len(dataset.columns))
 tree = buildTree(dataset)
 pprint.pprint(tree)
-
 
 
