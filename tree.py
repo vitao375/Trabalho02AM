@@ -69,7 +69,7 @@ for dataset in full_data:
 	dataset['Title'] = dataset['Title'].fillna(0)
 
 	# Mapping Embarked
-	#dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
+	dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
 	
 	# Mapping Fare
 	dataset.loc[ dataset['Fare'] <= 7.91, 'Fare'] 								= 0
@@ -89,7 +89,7 @@ for dataset in full_data:
 drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'SibSp']
 dataset = dataset.drop(drop_elements, axis = 1)
 #test  = test.drop(drop_elements, axis = 1)
-dataset = pd.DataFrame(dataset)
+dataset = pd.DataFrame(dataset, columns=['Survived', 'Title', 'Sex', 'Age', 'Fare', 'Embarked', 'Has_Cabin','FamilySize', 'IsAlone'])
 #print(dataset)
 target = 'Survived'
 entropy_node =0
@@ -146,13 +146,12 @@ def calc_ganho_info(dataset):
 
 
 def get_subtable(df, node,value):
-	h = df[df[node] == value].reset_index(drop=True)
+	return df[df[node] == value].reset_index(drop=True)
 	
-	return h
-
-
+	
 
 def buildTree(df,tree=None): 
+	i =0
 	Class = df.keys()[0] 
 	print(Class)
 	node = calc_ganho_info(df)
@@ -170,25 +169,24 @@ def buildTree(df,tree=None):
 
 		#print(value)
 		
-		#subtable =get_subtable(df, node, value)
+		subtable =get_subtable(df, node, value)
 		
-		clValue,counts = np.unique(df[target],return_counts=True)	
+		clValue,counts = np.unique(subtable[target],return_counts=True)	
 		#print(np.unique(subtable[target],return_counts=True))
 		#print(subtable[target])				
 		
-		if (len(counts)==1 or (len(df.columns)<=2)):#Checking purity of subset
+		if (len(counts)==1 or (len(df.columns)==2)):#Checking purity of subset
 			tree[node][value] = counts	
-			print('Aki======ok')
-			print(counts)
-			print(clValue)
-			print(clValue[0])											
+													
 		else:	
 			subtable = df.drop(columns=[node])
-			print(subtable)	
-			tree[node][value] = buildTree(subtable, tree) #Calling the function recursively 
+			tree[node][value] = buildTree(subtable) #Calling the function recursively 
 			
 			print("Entrou no else")
-	#print(df)			   
+			print(i)
+			i= 1+i
+	#print(df)
+
 	return tree
 
 
