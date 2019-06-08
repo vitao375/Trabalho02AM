@@ -5,13 +5,26 @@ from numpy import log2 as log
 import pprint
 
 
+# import csv
+
+# table = []
+# with open('train.csv','r') as f:
+# 	data = csv.DictReader(f)
+# 	for row in data:
+# 		table.append(row)
+
+# dataset = pd.DataFrame(table, columns=['Name', 'Age', 'Sex', 'Cabin', 'Fare', 'Embarked','Parch' ,'SibSp','FamilySize','Survived'])
+# print(dataset)
+
+
 
 dataset = pd.read_csv('train.csv')
-#dataset_ = dataset[['PassengerId', 'Survived', 'Pclass', 'Sex','Age', 'SibSp','Parch','Ticket','Fare', 'Cabin', 'Embarked']]
+dataset = dataset[['PassengerId', 'Name','Pclass', 'Sex','Age', 'SibSp','Parch','Ticket','Fare', 'Cabin', 'Embarked', 'Survived']]
 
 
 # Feature engineering steps taken from Sina and Anisotropic, with minor changes to avoid warnings
 full_data = [dataset]
+
 
 # Feature that tells whether a passenger had a cabin on the Titanic
 dataset['Has_Cabin'] = dataset["Cabin"].apply(lambda x: 0 if type(x) == float else 1)
@@ -19,7 +32,7 @@ dataset['Has_Cabin'] = dataset["Cabin"].apply(lambda x: 0 if type(x) == float el
 
 # Create new feature FamilySize as a combination of SibSp and Parch
 for dataset in full_data:
-	dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch'] + 1
+	dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch']+ 1
 # Create new feature IsAlone from FamilySize
 for dataset in full_data:
 	dataset['IsAlone'] = 0
@@ -83,20 +96,15 @@ for dataset in full_data:
 	dataset.loc[(dataset['Age'] > 16) & (dataset['Age'] <= 32), 'Age'] = 1
 	dataset.loc[(dataset['Age'] > 32) & (dataset['Age'] <= 48), 'Age'] = 2
 	dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 64), 'Age'] = 3
-	dataset.loc[ dataset['Age'] > 64, 'Age']						   = 4;
+	dataset.loc[ dataset['Age'] > 64, 'Age']						   = 4
 
 
 drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'SibSp']
 dataset = dataset.drop(drop_elements, axis = 1)
 #test  = test.drop(drop_elements, axis = 1)
-dataset = pd.DataFrame(dataset, columns=['Survived', 'Title', 'Sex', 'Age', 'Fare', 'Embarked', 'Has_Cabin','FamilySize', 'IsAlone'])
+#dataset = pd.DataFrame(dataset, columns=['Survived', 'Title', 'Sex', 'Age', 'Fare', 'Embarked', 'Has_Cabin','FamilySize', 'IsAlone'])
 #print(dataset)
 target = 'Survived'
-entropy_node =0
-values = dataset.Survived.unique()
-for value in values:
-	fraction = dataset.Survived.value_counts()[value]/len(dataset.Survived)  
-	entropy_node += -fraction*log(fraction)
 
 
 def calc_entropia_survived(dataset):
@@ -139,20 +147,21 @@ def calc_entropy_atributo(dataset, atributo):
 def calc_ganho_info(dataset):
 	list_ganho_info = []
 
-	for i in dataset.keys()[1:]:
+	for i in dataset.keys()[:-1]:
 		list_ganho_info.append(calc_entropia_survived(dataset)-calc_entropy_atributo(dataset, i))
 	
-	return  dataset.keys()[1:][np.argmax(list_ganho_info)]
+	return  dataset.keys()[:-1][np.argmax(list_ganho_info)]
 
 
-def get_subtable(df, node,value):
-	return df[df[node] == value].reset_index(drop=True)
+def get_subtable(df, node, value):
+	df2 = df[df[node] == value].reset_index(drop = True)
+	return df2
 	
 	
 
 def buildTree(df,tree=None): 
 	i =0
-	Class = df.keys()[0] 
+	Class = df.keys()[-1] 
 	print(Class)
 	node = calc_ganho_info(df)
 	print(node)
@@ -175,7 +184,7 @@ def buildTree(df,tree=None):
 		#print(np.unique(subtable[target],return_counts=True))
 		#print(subtable[target])				
 		
-		if (len(counts)==1 or (len(df.columns)==2)):#Checking purity of subset
+		if (len(counts)== 1 or (counts[1]/(counts[0]+ counts[1])>0.55)):#Checking purity of subset
 			tree[node][value] = counts	
 													
 		else:	
@@ -183,8 +192,7 @@ def buildTree(df,tree=None):
 			tree[node][value] = buildTree(subtable) #Calling the function recursively 
 			
 			print("Entrou no else")
-			print(i)
-			i= 1+i
+			
 	#print(df)
 
 	return tree
