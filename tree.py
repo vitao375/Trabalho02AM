@@ -161,9 +161,9 @@ def get_subtable(df, node, value):
 def buildTree(df,tree=None): 
 	i =0
 	Class = df.keys()[-1] 
-	print(Class)
+	#print(Class)
 	node = calc_ganho_info(df)
-	print(node)
+	#print(node)
 
 	attValue = np.unique(df[node])
 	
@@ -181,16 +181,29 @@ def buildTree(df,tree=None):
 		
 		clValue,counts = np.unique(subtable[target],return_counts=True)	
 		#print(np.unique(subtable[target],return_counts=True))
-		#print(subtable[target])				
-		
-		if (len(counts)== 1 or (counts[0]/(counts[0]+  counts[1]))>=.9 or (counts[1]/(counts[0]+ counts[1]))>0.6):#Checking purity of subset
-			tree[node][value] = counts	
+		#print(subtable[target])
+		#print(counts)
+		#print(clValue)				
+		if(len(counts)== 1):
+			if(clValue[0] == 0):
+				tree[node][value] = 'morto'
+				#pprint.pprint(tree)
+				#print('de cima morto')
+			else:
+				#pprint.pprint(tree)
+				tree[node][value] = 'vivo'
+
+		elif((counts[0]/(counts[0]+  counts[1]))>=.75):#Checking purity of subset
+			tree[node][value] = 'morto'
+		elif((counts[1]/(counts[0]+ counts[1]))>0.75):
+			tree[node][value] = 'vivo'	
 													
+						
 		else:	
 			subtable = df.drop(columns=[node])
 			tree[node][value] = buildTree(subtable) #Calling the function recursively 
 			
-			print("Entrou no else")
+			#print("Entrou no else")
 			
 	#print(df)
 
@@ -203,29 +216,39 @@ def buildTree(df,tree=None):
 
 def predict(inst,tree):
 
-    for nodes in tree.keys():        
-        
-        value = inst[nodes]
-        tree = tree[nodes][value]
-        prediction = 0
-            
-        if type(tree) is dict:
-            prediction = predict(inst, tree)
-        else:
-            prediction = tree
-            break;                            
-        
-    return prediction
+	for nodes in tree.keys():		
+		
+		value = inst[nodes]
+		tree = tree[nodes][value]
+		prediction = 0
+			
+		if type(tree) is dict:
+			prediction = predict(inst, tree)
+		else:
+			prediction = tree
+			break;							
+		
+	return prediction
+
+def result(tree):
+	n = 0
+	for i in range(100):
+		test = dataset.sample(1).iloc[0]
+		pre = predict(test, tree)
+		if(pre=='morto' and test['Survived']==0):
+			n+=1
+		elif(pre=='vivo' and test['Survived']==1):
+			n+=1
+		
+	return n/100
 
 # Only to see
 
 #print(len(dataset.columns))
 tree = buildTree(dataset)
-pprint.pprint(tree)
-test = dataset.sample(1).iloc[0]
+#pprint.pprint(tree)
+#print('<><><><><><><<<<><<<<<<<<<<<<<><><>>>>>>>>>>>>>>>>>')
+#print(test['Survived'])
+print(result(tree))
 
-print('<><><><><><><<<<><<<<<<<<<<<<<><><>>>>>>>>>>>>>>>>>')
-print(test['Survived'])
-
-pre = predict(test, tree)
-print(pre)
+#print(pre)
