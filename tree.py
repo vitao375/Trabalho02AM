@@ -4,7 +4,6 @@ import re
 from numpy import log2 as log
 import pprint
 
-
 # import csv
 
 # table = []
@@ -184,7 +183,7 @@ def buildTree(df,tree=None):
 		#print(np.unique(subtable[target],return_counts=True))
 		#print(subtable[target])				
 		
-		if (len(counts)== 1 or (counts[1]/(counts[0]+ counts[1])>0.55)):#Checking purity of subset
+		if (len(counts)== 1 or (counts[0]/(counts[0]+  counts[1]))>=.9 or (counts[1]/(counts[0]+ counts[1]))>0.6):#Checking purity of subset
 			tree[node][value] = counts	
 													
 		else:	
@@ -198,8 +197,35 @@ def buildTree(df,tree=None):
 	return tree
 
 
+
+
+
+
+def predict(inst,tree):
+
+    for nodes in tree.keys():        
+        
+        value = inst[nodes]
+        tree = tree[nodes][value]
+        prediction = 0
+            
+        if type(tree) is dict:
+            prediction = predict(inst, tree)
+        else:
+            prediction = tree
+            break;                            
+        
+    return prediction
+
+# Only to see
+
 #print(len(dataset.columns))
 tree = buildTree(dataset)
 pprint.pprint(tree)
+test = dataset.sample(1).iloc[0]
 
+print('<><><><><><><<<<><<<<<<<<<<<<<><><>>>>>>>>>>>>>>>>>')
+print(test['Survived'])
 
+pre = predict(test, tree)
+print(pre)
