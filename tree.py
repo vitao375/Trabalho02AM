@@ -1,19 +1,32 @@
+# TRABALHO DE ÁRVORES DE DESCISÃO  - APRENDIZADO DE MÁQUINAS
+# PROF. MARCELO THIELO
+# UNIPAMPA 2019/01
+#
+#
+# AUTORES:  GUILHERME SOUZA SANTOS          152020028
+#		    VITOR HUGO MARCIEL DOS SANTOS   
+#
+#
+#
+#
+
+
+
+
+#              ALGORITOMO
+# A PARTE DO TRATAMENTO DE DADOS FOI ADPTADA DO ALGORITOMO DISPONIVÉL NO LINK
+# https://www.kaggle.com/dmilla/introduction-to-decision-trees-titanic-dataset/comments
+#  
+
+
+
 import numpy as np
 import pandas as pd
 import re
 from numpy import log2 as log
 import pprint
 
-# import csv
 
-# table = []
-# with open('train.csv','r') as f:
-# 	data = csv.DictReader(f)
-# 	for row in data:
-# 		table.append(row)
-
-# dataset = pd.DataFrame(table, columns=['Name', 'Age', 'Sex', 'Cabin', 'Fare', 'Embarked','Parch' ,'SibSp','FamilySize','Survived'])
-# print(dataset)
 
 
 
@@ -107,7 +120,7 @@ target = 'Survived'
 
 
 def calc_entropia_survived(dataset):
-	Survived = dataset.keys()[0]   #To make the code generic, changing target variable class name
+	Survived = dataset.keys()[0]   
 	entropia = 0
 	values = dataset[Survived].unique()
 	for value in values:
@@ -116,7 +129,7 @@ def calc_entropia_survived(dataset):
 	return entropia
 
 
-#probabilidade dele sobreviver baseado em um atributo especifico
+#cALCULA ENTROPIA DO ATRIBUTO X DO COJUNTO DE DADOS
 def calc_entropy_atributo(dataset, atributo):
 	colun_survived = dataset.keys()[0]
 	values = dataset[colun_survived].unique()
@@ -136,13 +149,7 @@ def calc_entropy_atributo(dataset, atributo):
 	return abs(entropia_atributos)
 
 
-
-#print(calc_entropy_atributo(dataset, 'Fare'))
-#print(dataset.keys()[:-1])
-
-
-
-
+#GANHO DE INFORMAÇÃO, USANDO ENTROPIA CONFORME DISCUTIDO EM AULA
 def calc_ganho_info(dataset):
 	list_ganho_info = []
 
@@ -152,22 +159,22 @@ def calc_ganho_info(dataset):
 	return  dataset.keys()[:-1][np.argmax(list_ganho_info)]
 
 
+
 def get_subtable(df, node, value):
 	df2 = df[df[node] == value].reset_index(drop = True)
 	return df2
 	
 	
 
+#CONSTRUINDO A ARVORE POR MEIO DE RECURÇÃO USANDO UM DICIONARIO
 def buildTree(df,tree=None): 
-	i =0
-	Class = df.keys()[-1] 
-	#print(Class)
+	
 	node = calc_ganho_info(df)
 	#print(node)
 
 	attValue = np.unique(df[node])
 	
-	#Create an empty dictionary to create tree	
+		
 	if tree is None:					
 		tree={}
 		tree[node] = {}
@@ -183,7 +190,9 @@ def buildTree(df,tree=None):
 		#print(np.unique(subtable[target],return_counts=True))
 		#print(subtable[target])
 		#print(counts)
-		#print(clValue)				
+		#print(clValue)
+
+		#TESTA SE O NO É PURO, E VERIFICA SE ESTA VIVO OU MORTO				
 		if(len(counts)== 1):
 			if(clValue[0] == 0):
 				tree[node][value] = 'morto'
@@ -193,19 +202,16 @@ def buildTree(df,tree=None):
 				#pprint.pprint(tree)
 				tree[node][value] = 'vivo'
 
-		elif((counts[0]/(counts[0]+  counts[1]))>=.75):#Checking purity of subset
+		elif((counts[0]/(counts[0]+  counts[1]))>=.80):
 			tree[node][value] = 'morto'
-		elif((counts[1]/(counts[0]+ counts[1]))>0.75):
+		elif((counts[1]/(counts[0]+ counts[1]))>0.80):
 			tree[node][value] = 'vivo'	
 													
 						
 		else:	
 			subtable = df.drop(columns=[node])
-			tree[node][value] = buildTree(subtable) #Calling the function recursively 
-			
-			#print("Entrou no else")
-			
-	#print(df)
+			tree[node][value] = buildTree(subtable) 
+
 
 	return tree
 
@@ -213,7 +219,7 @@ def buildTree(df,tree=None):
 
 
 
-
+#TENTA PREDIZER SE O INDIVIDUO SOBREVEVEL OU NÃO AO TITANIC
 def predict(inst,tree):
 
 	for nodes in tree.keys():		
@@ -230,6 +236,9 @@ def predict(inst,tree):
 		
 	return prediction
 
+
+
+# TESTES DA TAXA DE ACERTO SE ESTÁ BATENDO COM AS TAXA NA HORA DE CRIAR A ARVORE.
 def result(tree):
 	n = 0
 	for i in range(100):
@@ -246,9 +255,13 @@ def result(tree):
 
 #print(len(dataset.columns))
 tree = buildTree(dataset)
-#pprint.pprint(tree)
+print('Press ENTER para ver a árvore!!')
+input()
+pprint.pprint(tree)
 #print('<><><><><><><<<<><<<<<<<<<<<<<><><>>>>>>>>>>>>>>>>>')
 #print(test['Survived'])
+print('Press ENTER para ver a taxaa de acerto!!')
+input()
 print(result(tree))
 
 #print(pre)
