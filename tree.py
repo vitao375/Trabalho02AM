@@ -202,7 +202,7 @@ def buildTree(df,tree=None):
 				#pprint.pprint(tree)
 				tree[node][value] = 'vivo'
 
-		elif((counts[0]/(counts[0]+  counts[1]))>=.80):
+		elif((counts[0]/(counts[0]+  counts[1]))>0.80):
 			tree[node][value] = 'morto'
 		elif((counts[1]/(counts[0]+ counts[1]))>0.80):
 			tree[node][value] = 'vivo'	
